@@ -4,7 +4,7 @@ from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect, Depends, HTT
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from passlib.context import CryptContext
 import os
 from sqlalchemy.orm import Session
@@ -28,11 +28,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserRegister(BaseModel):
     username: str
-    email: EmailStr
+    email: str
     password: str
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 def get_password_hash(password):
