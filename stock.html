@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZuraStock — Stock Analysis</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/extra_styles.css">
+  <link rel="stylesheet" href="css/zura_ai.css">
+</head>
+
+<body>
+  <!-- Loading Overlay (Active on entry) -->
+  <div id="globalLoader" class="loading-overlay active">
+    <div class="loading-spinner-wrap">
+      <div class="spinner-outer"></div>
+      <div class="spinner-inner"></div>
+      <div class="loading-logo"><i class="fas fa-chart-line"></i></div>
+    </div>
+    <div class="loading-text-wrap">
+      <div class="loading-title">AI Analysis in Progress</div>
+      <div class="loading-subtitle">Fetching market intelligence & technical signals...</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <div class="brand-icon-wrap"><i class="fas fa-chart-line"></i></div>
+      <span class="brand-text">ZuraStock</span>
+    </a>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Menu</span>
+
+      <a href="index.html" class="nav-link">
+        <i class="fas fa-th-large"></i> Dashboard
+      </a>
+      <a href="mutual-funds.html" class="nav-link">
+        <i class="fas fa-layer-group"></i> Mutual Funds
+      </a>
+      <a href="stock.html" class="nav-link active">
+        <i class="fas fa-brain"></i> AI Analysis
+        <span class="nav-badge new">NEW</span>
+      </a>
+      <a href="portfolio.html" class="nav-link">
+        <i class="fas fa-briefcase"></i> AI Portfolio
+      </a>
+      <a href="handbook.html" class="nav-link">
+        <i class="fas fa-book-open"></i> Trader's Handbook
+        <span class="nav-badge" style="background:var(--accent); color:#fff; font-size:0.6rem;">GUIDE</span>
+      </a>
+
+      <span class="nav-section-label" style="margin-top: 2rem;">Market Calendar</span>
+      <div class="market-calendar" id="marketCalendar">
+        <div class="mc-header">
+          <button id="mcPrevBtn"><i class="fas fa-chevron-left"></i></button>
+          <span id="mcMonthYear">Month Year</span>
+          <button id="mcNextBtn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="mc-weekdays">
+          <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+        </div>
+        <div class="mc-days" id="mcDays"></div>
+        <div class="mc-legend">
+          <div class="mc-leg-item"><span class="mc-dot mc-open"></span>Open</div>
+          <div class="mc-leg-item"><span class="mc-dot mc-closed"></span>Closed</div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">JD</div>
+        <div class="user-info">
+          <div class="user-name">John Doe</div>
+          <div class="user-role">Trader</div>
+        </div>
+        <i class="fas fa-ellipsis-h" style="font-size:0.8rem; color:var(--muted);"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN WRAPPER ─── -->
+  <div class="main-wrapper">
+
+    <!-- ─── HEADER ─── -->
+    <header class="top-header">
+      <div class="header-inner">
+        <div class="header-left">
+          <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Dashboard
+          </a>
+          <div class="page-label">Dashboard / <span>Stock Analysis</span></div>
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="globalSearch" placeholder="Search NSE stocks…">
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="stock-selector-wrap">
+            <select id="stockSelector">
+              <option value="">Select a Stock...</option>
+            </select>
+          </div>
+          <div class="ws-badge" id="wsStatus">
+            <div class="ws-dot"></div>
+            <span>Live Stream Connected</span>
+          </div>
+          <div class="header-action-btn" id="themeToggle"
+            style="margin-left: 0.5rem; width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-2); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; position: relative;">
+            <i class="fas fa-moon"></i>
+          </div>
+          <a href="login.html"
+            style="color:var(--muted); text-decoration:none; font-size:0.85rem; padding:0.4rem 0.75rem; border:1.5px solid var(--border); border-radius:8px; transition:all 0.2s;"
+            onclick="localStorage.removeItem('currentUser')">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ─── PAGE CONTENT ─── -->
+    <div class="page-content">
+
+      <!-- Hero Strip -->
+      <div class="hero-strip">
+        <div class="hero-left">
+          <div class="co-logo"><i class="fas fa-building"></i></div>
+          <div class="co-info">
+            <h2>
+              <span id="stockName">RELIANCE</span>
+              <button class="fav-heart" id="watchlistHeart" onclick="toggleWatchlistDetail()" title="Add to Watchlist">
+                <i class="fas fa-heart"></i>
+              </button>
+              <span class="sym-tag" id="stockSymbol">NSE: RELIANCE</span>
+            </h2>
+            <div class="co-meta">
+              <span class="sector-badge" id="stockSector">Energy</span>
+              <span class="dot">•</span>
+              <span>CEO: <span id="stockCEO">—</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-price">
+          <div class="price-main" id="stockPrice">₹2,785.60</div>
+          <div class="price-change pos" id="stockChange">
+            <i class="fas fa-caret-up"></i>
+            <span>+₹32.40 (+1.18%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div class="content-grid">
+
+        <!-- LEFT COLUMN -->
+        <div class="left-col">
+
+          <!-- AI Prediction -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-blue"><i class="fas fa-brain"></i></div>
+                <h3>Algorithmic Insight</h3>
+                <button class="refresh-btn" onclick="fetchLiveAnalysis(currentSymbol)" title="Refresh Analysis" style="background:none; border:none; color:var(--muted); cursor:pointer; padding:5px; margin-left: 10px; transition:0.2s;">
+                  <i class="fas fa-sync-alt" id="sync-icon-analysis"></i>
+                </button>
+              </div>
+              <div class="signal-area">
+                <div id="anomalyBadge" class="anomaly-badge">
+                  <i class="fas fa-fish"></i> Whale Activity
+                </div>
+                <div id="aiSignal" class="signal-pill signal-buy">BUY</div>
+              </div>
+            </div>
+
+            <div class="confidence-block">
+              <div class="conf-row">
+                <span class="conf-label">AI Confidence Score</span>
+                <span class="conf-score" id="aiConfidenceText">--%</span>
+              </div>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" id="aiConfidenceBar"></div>
+              </div>
+              <div class="ai-quote">
+                <i class="fas fa-quote-left"></i>
+                <p id="aiExplanation">Fetching latest market data for deep algorithmic analysis…</p>
+              </div>
+
+              <!-- Simple Interpretation for Normal Users -->
+              <div class="interpretation-box" id="aiInterpretationBox">
+                <div class="interpretation-title">
+                  <i class="fas fa-lightbulb"></i> AI Summary <span id="riskTag" class="risk-tag"></span>
+                </div>
+                <div class="interpretation-text" id="aiSimpleSummary">
+                  Running multi-modal analysis to provide a human-readable summary...
+                </div>
+                <a href="handbook.html" class="interpretation-title" style="margin-top:0.8rem; text-decoration:none; cursor:pointer; color:var(--muted); font-size:0.65rem; border-top:1px solid var(--border); padding-top:0.5rem; display:block;">
+                  <i class="fas fa-graduation-cap"></i> Need help deciding? Read the Strategy Guide
+                </a>
+              </div>
+
+              <div class="weights-row">
+                <div class="weight-item wb-blue">
+                  <div class="weight-label">Technicals</div>
+                  <div class="weight-bar-bg">
+                    <div class="weight-bar-fill" id="weightTech"></div>
+                  </div>
+                  <div class="weight-val" id="labelTech">--%</div>
+                </div>
+                <div class="weight-item wb-purple">
+                  <div class="weight-label">Sentiment</div>
+                  <div class="weight-bar-bg">
+                    <div class="weight-bar-fill" id="weightSent"></div>
+                  </div>
+                  <div class="weight-val" id="labelSent">--%</div>
+                </div>
+                <div class="weight-item wb-green">
+                  <div class="weight-label">Fundamentals</div>
+                  <div class="weight-bar-bg">
+                    <div class="weight-bar-fill" id="weightFund"></div>
+                  </div>
+                  <div class="weight-val" id="labelFund">--%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pros-cons">
+              <div class="pros-box">
+                <div class="pc-title"><i class="fas fa-shield-halved"></i> Strengths</div>
+                <ul class="pc-list" id="aiProsList">
+                  <li><i class="fas fa-check"></i><span>Analyzing price action…</span></li>
+                </ul>
+              </div>
+              <div class="cons-box">
+                <div class="pc-title"><i class="fas fa-triangle-exclamation"></i> Risks</div>
+                <ul class="pc-list" id="aiConsList">
+                  <li><i class="fas fa-times"></i><span>Analyzing momentum…</span></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="tech-row">
+              <div class="tech-chip">
+                <span class="tech-chip-label">RSI (14) <i class="fas fa-question-circle help-icon" data-tooltip="Relative Strength Index: Tells us if the stock is 'Overbought' (too expensive) or 'Oversold' (potentially a bargain)."></i></span>
+                <span class="tech-chip-val" id="valRSI">--</span>
+              </div>
+              <div class="tech-chip">
+                <span class="tech-chip-label">SMA (20) <i class="fas fa-question-circle help-icon" data-tooltip="Simple Moving Average (20-day): The average price over the last 20 days. Prices above this usually mean a positive trend."></i></span>
+                <span class="tech-chip-val" id="valSMA20">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- News Sentiment -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-accent"><i class="fas fa-newspaper"></i></div>
+                <h3>AI Market Mood</h3>
+              </div>
+              <div id="moodBadge" class="mood-badge">Analyzing…</div>
+            </div>
+            <div class="news-list" id="newsList">
+              <div style="padding:0.5rem; color:var(--muted); font-size:0.82rem;">Loading news…</div>
+            </div>
+          </div>
+
+          <!-- Fundamentals -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-accent"><i class="fas fa-microchip"></i></div>
+                <h3>Fundamental Health</h3>
+              </div>
+            </div>
+            <div class="fundamentals-grid">
+              <div class="fund-card">
+                <div class="fund-label">Market Cap</div>
+                <div class="fund-val" id="valMarketCap">--</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">P/E Ratio</div>
+                <div class="fund-val" id="valPE">--</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">EPS (TTM)</div>
+                <div class="fund-val" id="valEPS">--</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">ROE %</div>
+                <div class="fund-val" id="valROE">--%</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">52W High</div>
+                <div class="fund-val pos" id="val52High">--</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">52W Low</div>
+                <div class="fund-val neg" id="val52Low">--</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">Div. Yield</div>
+                <div class="fund-val" id="valDivYield">--%</div>
+              </div>
+              <div class="fund-card">
+                <div class="fund-label">Debt/Equity</div>
+                <div class="fund-val" id="valDebtEquity">--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price History Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-blue"><i class="fas fa-chart-area"></i></div>
+                <h3>Execution Trend</h3>
+                <button id="toggleChartBtn" class="mbt-ghost"
+                  style="font-size:0.7rem; padding:2px 8px; margin-left:10px;">Switch to Line View</button>
+              </div>
+              <div class="tf-controls" id="timeframeControls">
+                <button class="tf-btn active" onclick="updateTimeframe('1M')" data-period="1M">1M</button>
+                <button class="tf-btn" onclick="updateTimeframe('6M')" data-period="6M">6M</button>
+                <button class="tf-btn" onclick="updateTimeframe('1Y')" data-period="1Y">1Y</button>
+              </div>
+            </div>
+            <div id="tvChartContainer"
+              style="height:340px; border-radius:12px; overflow:hidden; background:var(--surface);"></div>
+          </div>
+
+          <!-- AI Forecast Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-purple"><i class="fas fa-arrow-trend-up"></i></div>
+                <h3>7-Day AI Price Forecast</h3>
+              </div>
+            </div>
+            <p style="font-size:0.74rem; color:var(--muted); margin-bottom:1rem; font-style:italic;">
+              Ensemble ML projection with upper/lower probability bands
+            </p>
+            <div style="height:260px; position:relative;" id="forecastChart"></div>
+          </div>
+
+          <!-- Financial Growth -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-green"><i class="fas fa-seedling"></i></div>
+                <h3>Financial Growth</h3>
+              </div>
+            </div>
+            <p style="font-size:0.74rem; color:var(--muted); margin-bottom:1rem;">Annual Revenue vs Net Income (Last 4Y)
+            </p>
+            <div style="height:220px; position:relative;" id="growthChart"></div>
+          </div>
+
+          <!-- Company Profile -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-amber"><i class="fas fa-building"></i></div>
+                <h3>Company Profile</h3>
+              </div>
+            </div>
+
+            <!-- Redesigned Company Header -->
+            <div class="about-company-header">
+              <div class="about-logo" id="aboutLogo"><i class="fas fa-building"></i></div>
+              <div class="about-company-meta">
+                <div class="about-company-name" id="aboutCompanyName">Fetching...</div>
+                <div class="about-badge-row">
+                  <span class="about-tag sector" id="aboutSectorTag">—</span>
+                  <span id="aboutExchangeBadge" class="about-tag exchange">NSE</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Collapsible Description Section -->
+            <div class="about-desc-container">
+              <div class="about-desc-wrap collapsed" id="descWrap">
+                <p class="about-text" id="companyDescription">Fetching company details and history...</p>
+              </div>
+              <div class="read-more-trigger" id="readMoreBtn" style="display: none;">
+                <i class="fas fa-chevron-down"></i>
+                <span>Read More</span>
+              </div>
+            </div>
+
+            <!-- Premium Stats Grid -->
+            <div class="about-stats-grid">
+              <div class="about-stat-card">
+                <div class="about-stat-icon ci-blue"><i class="fas fa-map-marker-alt"></i></div>
+                <div class="about-stat-info">
+                  <div class="about-stat-label">Country</div>
+                  <div class="about-stat-val" id="aboutCountry">IN</div>
+                </div>
+              </div>
+              <div class="about-stat-card">
+                <div class="about-stat-icon ci-green"><i class="fas fa-users"></i></div>
+                <div class="about-stat-info">
+                  <div class="about-stat-label">Employees</div>
+                  <div class="about-stat-val" id="aboutEmployees">—</div>
+                </div>
+              </div>
+              <div class="about-stat-card">
+                <div class="about-stat-icon ci-purple"><i class="fas fa-calendar-alt"></i></div>
+                <div class="about-stat-info">
+                  <div class="about-stat-label">Founded</div>
+                  <div class="about-stat-val" id="aboutFounded">—</div>
+                </div>
+              </div>
+              <div class="about-stat-card">
+                <div class="about-stat-icon ci-amber"><i class="fas fa-landmark"></i></div>
+                <div class="about-stat-info">
+                  <div class="about-stat-label">Stock Exchange</div>
+                  <div class="about-stat-val">NSE India</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /left-col -->
+
+        <!-- RIGHT COLUMN -->
+        <div class="right-col">
+
+          <!-- Trading Panel Removed as per 'Analysis Only' directive -->
+
+          <!-- Market Snapshot -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-icon ci-blue"><i class="fas fa-gauge-high"></i></div>
+                <h3>Market Snapshot</h3>
+              </div>
+            </div>
+            <div class="snapshot-list">
+              <div class="snapshot-row">
+                <span class="snap-label"><i class="fas fa-door-open"></i> Open</span>
+                <span class="snap-val" id="stockOpen">--</span>
+              </div>
+              <div class="snapshot-row">
+                <span class="snap-label"><i class="fas fa-arrow-up"></i> Day High</span>
+                <span class="snap-val pos" id="stockHigh">--</span>
+              </div>
+              <div class="snapshot-row">
+                <span class="snap-label"><i class="fas fa-arrow-down"></i> Day Low</span>
+                <span class="snap-val neg" id="stockLow">--</span>
+              </div>
+              <div class="snapshot-row">
+                <span class="snap-label"><i class="fas fa-database"></i> Volume</span>
+                <span class="snap-val" id="stockVolume">--</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /right-col -->
+
+      </div><!-- /content-grid -->
+    </div><!-- /page-content -->
+  </div><!-- /main-wrapper -->
+
+  <!-- Trade Modals Removed -->
+
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="js/main.js"></script>
+  <script src="js/stock.js"></script>
+  <script src="js/zura_ai.js"></script>
+</body>
+
+</html>
