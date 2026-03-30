@@ -20,8 +20,9 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY backend/requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install Python dependencies with a higher timeout
+RUN pip install --upgrade pip && \
+    pip install --default-timeout=1000 --retries=5 --no-cache-dir -r requirements.txt
 
 # Copy the entire project into the container
 COPY . .
