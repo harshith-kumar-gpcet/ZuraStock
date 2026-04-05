@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from passlib.context import CryptContext
+import bcrypt
 import os
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine, Base, User, Watchlist, Portfolio, init_db, get_db
@@ -24,7 +24,6 @@ from datetime import datetime, time
 import pytz
 
 # --- Authentication Configuration ---
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserRegister(BaseModel):
     username: str
@@ -36,10 +35,17 @@ class UserLogin(BaseModel):
     password: str
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        if isinstance(hashed_password, str):
+            hashed_password = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password)
+    except Exception:
+        return False
 
 # Create a persistent session with curl_cffi to prevent rate limiting/blocking.
 # Using 'chrome120' impersonation to mimic a modern browser.
